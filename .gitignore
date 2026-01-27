@@ -1,0 +1,25 @@
+# Dependencies
+/vendor/
+
+# Build output
+/dist/
+
+# Test coverage
+/coverage/
+.phpunit.result.cache
+
+# Composer
+composer.lock
+
+# Private/AI
+CLAUDE.md
+
+# SVN
+/svn/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
