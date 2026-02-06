@@ -3,7 +3,7 @@
  * Plugin Name: RationalCleanup
  * Plugin URI: https://rationalwp.com/plugins/cleanup/
  * Description: Clean up legacy WordPress bloat, improve security, and optimize performance. All features are toggleable with opinionated defaults.
- * Version: 1.0.1
+ * Version: 1.1.0
  * Author: RationalWP
  * Author URI: https://rationalwp.com
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'RATIONALCLEANUP_VERSION', '1.0.1' );
+define( 'RATIONALCLEANUP_VERSION', '1.1.0' );
 define( 'RATIONALCLEANUP_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'RATIONALCLEANUP_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'RATIONALCLEANUP_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
