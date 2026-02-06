@@ -85,6 +85,9 @@ class RationalCleanup {
 			'disable_dashboard_right_now'   => false,
 			'disable_dashboard_activity'    => false,
 			'disable_dashboard_site_health' => false,
+
+			// Third-Party Dashboard Widgets
+			'disabled_third_party_widgets' => array(),
 		);
 	}
 
@@ -198,10 +201,122 @@ class RationalCleanup {
 		) {
 			add_action( 'wp_dashboard_setup', array( $this, 'remove_dashboard_widgets' ) );
 		}
+
+		// Third-party dashboard widget scanning and removal (always runs).
+		add_action( 'wp_dashboard_setup', array( $this, 'scan_and_remove_third_party_widgets' ), 999 );
 	}
 
 	private function is_enabled( $option ) {
 		return isset( $this->options[ $option ] ) && $this->options[ $option ];
+	}
+
+	/**
+	 * Get the list of core WordPress dashboard widget IDs.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return array List of core widget IDs.
+	 */
+	private function get_core_widget_ids() {
+		return array(
+			'dashboard_primary',
+			'dashboard_quick_press',
+			'dashboard_right_now',
+			'dashboard_activity',
+			'dashboard_site_health',
+			'dashboard_browser_nag',
+			'dashboard_php_nag',
+			'network_dashboard_right_now',
+			'dashboard_incoming_links',
+			'dashboard_plugins',
+			'dashboard_secondary',
+			'dashboard_recent_drafts',
+			'dashboard_recent_comments',
+		);
+	}
+
+	/**
+	 * Get the list of disabled third-party widget IDs.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return array List of disabled third-party widget IDs.
+	 */
+	private function get_disabled_third_party_widgets() {
+		if ( isset( $this->options['disabled_third_party_widgets'] ) && is_array( $this->options['disabled_third_party_widgets'] ) ) {
+			return $this->options['disabled_third_party_widgets'];
+		}
+		return array();
+	}
+
+	/**
+	 * Scan for third-party dashboard widgets and remove disabled ones.
+	 *
+	 * Hooked on wp_dashboard_setup at priority 999 to run after all plugins
+	 * have registered their widgets.
+	 *
+	 * @since 1.1.0
+	 */
+	public function scan_and_remove_third_party_widgets() {
+		global $wp_meta_boxes;
+
+		if ( empty( $wp_meta_boxes['dashboard'] ) || ! is_array( $wp_meta_boxes['dashboard'] ) ) {
+			return;
+		}
+
+		$core_ids    = $this->get_core_widget_ids();
+		$found       = array();
+		$now         = time();
+		$contexts    = array( 'normal', 'side', 'column3', 'column4' );
+
+		foreach ( $wp_meta_boxes['dashboard'] as $context => $priorities ) {
+			if ( ! is_array( $priorities ) ) {
+				continue;
+			}
+			foreach ( $priorities as $priority => $boxes ) {
+				if ( ! is_array( $boxes ) ) {
+					continue;
+				}
+				foreach ( $boxes as $id => $box ) {
+					if ( false === $box || ! is_array( $box ) ) {
+						continue;
+					}
+					if ( in_array( $id, $core_ids, true ) ) {
+						continue;
+					}
+					$title = isset( $box['title'] ) ? wp_strip_all_tags( $box['title'] ) : $id;
+					$found[ $id ] = array(
+						'title'     => $title,
+						'last_seen' => $now,
+					);
+				}
+			}
+		}
+
+		// Merge with existing registry to preserve stale entries.
+		$existing = get_option( 'rationalcleanup_third_party_widgets', array() );
+		$previous_widgets = isset( $existing['widgets'] ) && is_array( $existing['widgets'] ) ? $existing['widgets'] : array();
+
+		// Keep previous entries, update with newly found ones.
+		$merged = $previous_widgets;
+		foreach ( $found as $id => $data ) {
+			$merged[ $id ] = $data;
+		}
+
+		$registry = array(
+			'last_scan' => $now,
+			'widgets'   => $merged,
+		);
+
+		update_option( 'rationalcleanup_third_party_widgets', $registry );
+
+		// Remove disabled third-party widgets.
+		$disabled = $this->get_disabled_third_party_widgets();
+		foreach ( $disabled as $widget_id ) {
+			foreach ( $contexts as $context ) {
+				remove_meta_box( $widget_id, 'dashboard', $context );
+			}
+		}
 	}
 
 	public function remove_emoji_dns_prefetch( $urls, $relation_type ) {
@@ -437,6 +552,44 @@ class RationalCleanup {
 		$this->add_toggle_field( 'disable_dashboard_right_now', __( 'Remove At a Glance widget', 'rationalcleanup' ), 'rationalcleanup_admin' );
 		$this->add_toggle_field( 'disable_dashboard_activity', __( 'Remove Activity widget', 'rationalcleanup' ), 'rationalcleanup_admin' );
 		$this->add_toggle_field( 'disable_dashboard_site_health', __( 'Remove Site Health Status widget', 'rationalcleanup' ), 'rationalcleanup_admin' );
+
+		// Third-Party Dashboard Widgets Section.
+		$third_party_registry = get_option( 'rationalcleanup_third_party_widgets', array() );
+		$third_party_widgets  = isset( $third_party_registry['widgets'] ) && is_array( $third_party_registry['widgets'] ) ? $third_party_registry['widgets'] : array();
+		$last_scan            = isset( $third_party_registry['last_scan'] ) ? $third_party_registry['last_scan'] : 0;
+
+		add_settings_section(
+			'rationalcleanup_third_party_widgets',
+			__( 'Third-Party Dashboard Widgets', 'rationalcleanup' ),
+			array( $this, 'render_section_third_party_widgets' ),
+			'rationalcleanup'
+		);
+
+		if ( ! empty( $third_party_widgets ) ) {
+			$disabled = $this->get_disabled_third_party_widgets();
+
+			foreach ( $third_party_widgets as $widget_id => $widget_data ) {
+				$label = isset( $widget_data['title'] ) ? $widget_data['title'] : $widget_id;
+
+				// Mark stale widgets that were not seen in the last scan.
+				$widget_last_seen = isset( $widget_data['last_seen'] ) ? $widget_data['last_seen'] : 0;
+				if ( $last_scan > 0 && $widget_last_seen < $last_scan ) {
+					$label .= ' ' . __( '(not currently detected)', 'rationalcleanup' );
+				}
+
+				add_settings_field(
+					'third_party_' . $widget_id,
+					$label,
+					array( $this, 'render_third_party_toggle' ),
+					'rationalcleanup',
+					'rationalcleanup_third_party_widgets',
+					array(
+						'widget_id' => $widget_id,
+						'disabled'  => $disabled,
+					)
+				);
+			}
+		}
 	}
 
 	private function add_toggle_field( $id, $label, $section ) {
@@ -458,7 +611,17 @@ class RationalCleanup {
 		$sanitized = array();
 
 		foreach ( array_keys( $defaults ) as $key ) {
+			if ( 'disabled_third_party_widgets' === $key ) {
+				continue;
+			}
 			$sanitized[ $key ] = ! empty( $input[ $key ] );
+		}
+
+		// Handle the third-party widgets array.
+		if ( isset( $input['disabled_third_party_widgets'] ) && is_array( $input['disabled_third_party_widgets'] ) ) {
+			$sanitized['disabled_third_party_widgets'] = array_map( 'sanitize_key', $input['disabled_third_party_widgets'] );
+		} else {
+			$sanitized['disabled_third_party_widgets'] = array();
 		}
 
 		return $sanitized;
@@ -486,6 +649,49 @@ class RationalCleanup {
 
 	public function render_section_admin() {
 		echo '<p>' . esc_html__( 'Declutter the WordPress admin dashboard.', 'rationalcleanup' ) . '</p>';
+	}
+
+	/**
+	 * Render the third-party dashboard widgets section description.
+	 *
+	 * @since 1.1.0
+	 */
+	public function render_section_third_party_widgets() {
+		$registry = get_option( 'rationalcleanup_third_party_widgets', array() );
+		$widgets  = isset( $registry['widgets'] ) && is_array( $registry['widgets'] ) ? $registry['widgets'] : array();
+
+		if ( empty( $widgets ) ) {
+			echo '<div class="notice notice-info inline" style="margin: 15px 0; padding: 12px;">';
+			echo '<p><strong>' . esc_html__( 'No third-party dashboard widgets detected yet.', 'rationalcleanup' ) . '</strong></p>';
+			echo '<p>' . esc_html__( 'Third-party widgets (added by plugins like WooCommerce, Elementor, Jetpack, etc.) can only be detected on the Dashboard page. Visit your', 'rationalcleanup' );
+			echo ' <a href="' . esc_url( admin_url( '/' ) ) . '">' . esc_html__( 'Dashboard', 'rationalcleanup' ) . '</a> ';
+			echo esc_html__( 'once, then return here to manage them.', 'rationalcleanup' ) . '</p>';
+			echo '</div>';
+		} else {
+			echo '<p>' . esc_html__( 'Disable dashboard widgets added by third-party plugins. Visit the Dashboard to update this list.', 'rationalcleanup' ) . '</p>';
+		}
+	}
+
+	/**
+	 * Render a toggle checkbox for a third-party widget.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param array $args Field arguments containing widget_id and disabled list.
+	 */
+	public function render_third_party_toggle( $args ) {
+		$widget_id = $args['widget_id'];
+		$disabled  = $args['disabled'];
+		$checked   = in_array( $widget_id, $disabled, true );
+		?>
+		<label class="rationalcleanup-toggle">
+			<input type="checkbox"
+				name="rationalcleanup_options[disabled_third_party_widgets][]"
+				value="<?php echo esc_attr( $widget_id ); ?>"
+				<?php checked( $checked ); ?>>
+			<span class="rationalcleanup-toggle-slider"></span>
+		</label>
+		<?php
 	}
 
 	public function render_toggle_field( $args ) {
@@ -522,6 +728,7 @@ class RationalCleanup {
 		?>
 		<div class="wrap rationalcleanup-settings">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+			<?php settings_errors(); ?>
 			<form action="options.php" method="post">
 				<?php
 				settings_fields( 'rationalcleanup_options_group' );
@@ -552,6 +759,7 @@ function rationalcleanup_deactivate() {
 register_uninstall_hook( __FILE__, 'rationalcleanup_uninstall' );
 function rationalcleanup_uninstall() {
 	delete_option( 'rationalcleanup_options' );
+	delete_option( 'rationalcleanup_third_party_widgets' );
 }
 
 add_action( 'plugins_loaded', array( 'RationalCleanup', 'get_instance' ) );

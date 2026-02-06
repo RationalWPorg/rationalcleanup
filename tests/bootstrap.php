@@ -20,6 +20,14 @@ if ( ! defined( 'ABSPATH' ) ) {
     define( 'ABSPATH', '/tmp/wordpress/' );
 }
 
+if ( ! defined( 'DAY_IN_SECONDS' ) ) {
+    define( 'DAY_IN_SECONDS', 86400 );
+}
+
+if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
+    define( 'HOUR_IN_SECONDS', 3600 );
+}
+
 // Define WordPress functions that are called at plugin load time
 // These need to exist BEFORE the plugin file is loaded
 
@@ -107,6 +115,30 @@ if ( ! function_exists( 'wp_parse_args' ) ) {
 if ( ! function_exists( '__' ) ) {
     function __( $text, $domain = 'default' ) {
         return $text;
+    }
+}
+
+if ( ! function_exists( 'wp_strip_all_tags' ) ) {
+    function wp_strip_all_tags( $string, $remove_breaks = false ) {
+        return strip_tags( $string );
+    }
+}
+
+if ( ! function_exists( 'update_option' ) ) {
+    function update_option( $option, $value, $autoload = null ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'sanitize_key' ) ) {
+    function sanitize_key( $key ) {
+        return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( $key ) );
+    }
+}
+
+if ( ! function_exists( 'remove_meta_box' ) ) {
+    function remove_meta_box( $id, $screen, $context ) {
+        // No-op for testing
     }
 }
 

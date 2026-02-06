@@ -16,7 +16,7 @@ class OptionsTest extends TestCase {
         $instance = $this->createInstance();
         $defaults = $instance->get_defaults();
 
-        // Verify all 24 options are present
+        // Verify all 25 options are present
         $expected_options = [
             // Head Tags
             'remove_generator',
@@ -48,13 +48,15 @@ class OptionsTest extends TestCase {
             'disable_dashboard_right_now',
             'disable_dashboard_activity',
             'disable_dashboard_site_health',
+            // Third-Party Dashboard Widgets
+            'disabled_third_party_widgets',
         ];
 
         foreach ( $expected_options as $option ) {
             $this->assertArrayHasKey( $option, $defaults, "Missing option: $option" );
         }
 
-        $this->assertCount( 24, $defaults );
+        $this->assertCount( 25, $defaults );
     }
 
     /**
@@ -173,5 +175,55 @@ class OptionsTest extends TestCase {
         $this->assertArrayNotHasKey( 'unknown_option', $sanitized );
         $this->assertArrayNotHasKey( 'another_unknown', $sanitized );
         $this->assertTrue( $sanitized['remove_generator'] );
+    }
+
+    /**
+     * Test sanitize_options handles disabled_third_party_widgets array.
+     */
+    public function test_sanitize_options_handles_third_party_widgets_array(): void {
+        $instance = $this->createInstance();
+
+        $input = [
+            'remove_generator'             => '1',
+            'disabled_third_party_widgets'  => [
+                'woo_dashboard_status',
+                'jetpack_summary_widget',
+            ],
+        ];
+
+        $sanitized = $instance->sanitize_options( $input );
+
+        $this->assertIsArray( $sanitized['disabled_third_party_widgets'] );
+        $this->assertCount( 2, $sanitized['disabled_third_party_widgets'] );
+        $this->assertContains( 'woo_dashboard_status', $sanitized['disabled_third_party_widgets'] );
+        $this->assertContains( 'jetpack_summary_widget', $sanitized['disabled_third_party_widgets'] );
+    }
+
+    /**
+     * Test sanitize_options defaults to empty array when third-party widgets not provided.
+     */
+    public function test_sanitize_options_defaults_third_party_widgets_to_empty_array(): void {
+        $instance = $this->createInstance();
+
+        $sanitized = $instance->sanitize_options( [] );
+
+        $this->assertIsArray( $sanitized['disabled_third_party_widgets'] );
+        $this->assertEmpty( $sanitized['disabled_third_party_widgets'] );
+    }
+
+    /**
+     * Test sanitize_options defaults to empty array when third-party widgets is not an array.
+     */
+    public function test_sanitize_options_rejects_non_array_third_party_widgets(): void {
+        $instance = $this->createInstance();
+
+        $input = [
+            'disabled_third_party_widgets' => 'not_an_array',
+        ];
+
+        $sanitized = $instance->sanitize_options( $input );
+
+        $this->assertIsArray( $sanitized['disabled_third_party_widgets'] );
+        $this->assertEmpty( $sanitized['disabled_third_party_widgets'] );
     }
 }
