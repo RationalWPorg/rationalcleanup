@@ -1,10 +1,10 @@
 === RationalCleanup ===
 Contributors: rationalwp
 Tags: cleanup, performance, security, optimization, disable xmlrpc
-Requires at least: 5.0
-Tested up to: 7.0
+Requires at least: 6.3
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,7 +20,6 @@ RationalCleanup removes unnecessary WordPress features, hardens security, and im
 Remove unnecessary meta tags and links from the document head:
 
 * Remove WordPress generator meta tag (hides version number)
-* Remove WLW manifest link
 * Remove RSD link
 * Remove shortlink
 * Remove REST API discovery link
@@ -118,6 +117,12 @@ It blocks two common methods attackers use to discover usernames: author archive
 
 == Changelog ==
 
+= 1.1.2 =
+* Tested up to WordPress 7.1.
+* Removed: the "Remove WLW manifest link" option. WordPress stopped outputting the WLW manifest link in 6.3, so the option no longer had any effect.
+* Removed: an internal call to unhook `wp_global_styles_render_svg_filters()`, which WordPress deprecated in 6.3. Global styles removal is unaffected.
+* Changed: minimum supported WordPress version is now 6.3, matching the two changes above.
+
 = 1.1.1 =
 * Tested up to WordPress 7.0.
 
@@ -139,6 +144,9 @@ It blocks two common methods attackers use to discover usernames: author archive
 * Admin dashboard cleanup (5 widget removal options)
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+Confirmed compatible with WordPress 7.1. This release requires WordPress 6.3 or newer and removes the "Remove WLW manifest link" option, which no longer did anything on supported versions.
 
 = 1.0.0 =
 Initial release.
