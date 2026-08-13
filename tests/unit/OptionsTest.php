@@ -16,11 +16,10 @@ class OptionsTest extends TestCase {
         $instance = $this->createInstance();
         $defaults = $instance->get_defaults();
 
-        // Verify all 25 options are present
+        // Verify all 24 options are present
         $expected_options = [
             // Head Tags
             'remove_generator',
-            'remove_wlw_manifest',
             'remove_rsd_link',
             'remove_shortlink',
             'remove_rest_api_link',
@@ -56,7 +55,7 @@ class OptionsTest extends TestCase {
             $this->assertArrayHasKey( $option, $defaults, "Missing option: $option" );
         }
 
-        $this->assertCount( 25, $defaults );
+        $this->assertCount( 24, $defaults );
     }
 
     /**
@@ -81,7 +80,6 @@ class OptionsTest extends TestCase {
 
         // These cleanup options should be true by default
         $this->assertTrue( $defaults['remove_generator'] );
-        $this->assertTrue( $defaults['remove_wlw_manifest'] );
         $this->assertTrue( $defaults['remove_rsd_link'] );
         $this->assertTrue( $defaults['remove_shortlink'] );
         $this->assertTrue( $defaults['remove_rest_api_link'] );
@@ -131,7 +129,6 @@ class OptionsTest extends TestCase {
         // Simulate form input with '1' for checked boxes
         $input = [
             'remove_generator'     => '1',
-            'remove_wlw_manifest'  => '1',
             'remove_rsd_link'      => '',
             'remove_shortlink'     => '0',
         ];
@@ -139,7 +136,6 @@ class OptionsTest extends TestCase {
         $sanitized = $instance->sanitize_options( $input );
 
         $this->assertTrue( $sanitized['remove_generator'] );
-        $this->assertTrue( $sanitized['remove_wlw_manifest'] );
         $this->assertFalse( $sanitized['remove_rsd_link'] );
         $this->assertFalse( $sanitized['remove_shortlink'] );
     }

@@ -1,8 +1,8 @@
 === RationalCleanup ===
 Contributors: rationalwp
 Tags: cleanup, performance, security, optimization, disable xmlrpc
-Requires at least: 5.0
-Tested up to: 7.0
+Requires at least: 6.3
+Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 1.1.1
 License: GPLv2 or later
@@ -20,7 +20,6 @@ RationalCleanup removes unnecessary WordPress features, hardens security, and im
 Remove unnecessary meta tags and links from the document head:
 
 * Remove WordPress generator meta tag (hides version number)
-* Remove WLW manifest link
 * Remove RSD link
 * Remove shortlink
 * Remove REST API discovery link

@@ -9,7 +9,7 @@
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: rationalcleanup
- * Requires at least: 5.0
+ * Requires at least: 6.3
  * Requires PHP: 7.4
  */
 
@@ -52,7 +52,6 @@ class RationalCleanup {
 		return array(
 			// Head Tags (Phase 1)
 			'remove_generator'        => true,
-			'remove_wlw_manifest'     => true,
 			'remove_rsd_link'         => true,
 			'remove_shortlink'        => true,
 			'remove_rest_api_link'    => true,
@@ -97,10 +96,6 @@ class RationalCleanup {
 			remove_action( 'wp_head', 'wp_generator' );
 		}
 
-		if ( $this->is_enabled( 'remove_wlw_manifest' ) ) {
-			remove_action( 'wp_head', 'wlwmanifest_link' );
-		}
-
 		if ( $this->is_enabled( 'remove_rsd_link' ) ) {
 			remove_action( 'wp_head', 'rsd_link' );
 		}
@@ -140,7 +135,6 @@ class RationalCleanup {
 		if ( $this->is_enabled( 'remove_global_styles' ) ) {
 			remove_action( 'wp_enqueue_scripts', 'wp_enqueue_global_styles' );
 			remove_action( 'wp_footer', 'wp_enqueue_global_styles', 1 );
-			remove_action( 'wp_body_open', 'wp_global_styles_render_svg_filters' );
 		}
 
 		// Security
@@ -484,7 +478,6 @@ class RationalCleanup {
 		);
 
 		$this->add_toggle_field( 'remove_generator', __( 'Remove generator meta tag', 'rationalcleanup' ), 'rationalcleanup_head_tags' );
-		$this->add_toggle_field( 'remove_wlw_manifest', __( 'Remove WLW manifest link', 'rationalcleanup' ), 'rationalcleanup_head_tags' );
 		$this->add_toggle_field( 'remove_rsd_link', __( 'Remove RSD link', 'rationalcleanup' ), 'rationalcleanup_head_tags' );
 		$this->add_toggle_field( 'remove_shortlink', __( 'Remove shortlink', 'rationalcleanup' ), 'rationalcleanup_head_tags' );
 		$this->add_toggle_field( 'remove_rest_api_link', __( 'Remove REST API link', 'rationalcleanup' ), 'rationalcleanup_head_tags' );
