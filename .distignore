@@ -5,6 +5,11 @@
 .git
 .gitignore
 .gitattributes
+README.md
+
+# Screenshots (served from the SVN assets/ directory, not shipped in the plugin)
+screenshot-*.png
+screenshot-*.jpg
 
 # Development files
 .claude
