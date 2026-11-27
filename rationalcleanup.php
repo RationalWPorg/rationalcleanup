@@ -3,7 +3,7 @@
  * Plugin Name: RationalCleanup
  * Plugin URI: https://rationalwp.com/plugins/cleanup/
  * Description: Clean up legacy WordPress bloat, improve security, and optimize performance. All features are toggleable with opinionated defaults.
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: RationalWP
  * Author URI: https://rationalwp.com
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'RATIONALCLEANUP_VERSION', '1.1.2' );
+define( 'RATIONALCLEANUP_VERSION', '1.1.3' );
 define( 'RATIONALCLEANUP_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'RATIONALCLEANUP_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'RATIONALCLEANUP_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -135,6 +135,8 @@ class RationalCleanup {
 		if ( $this->is_enabled( 'remove_global_styles' ) ) {
 			remove_action( 'wp_enqueue_scripts', 'wp_enqueue_global_styles' );
 			remove_action( 'wp_footer', 'wp_enqueue_global_styles', 1 );
+			// Block style variation CSS depends on global-styles; without this it triggers a missing-dependency notice.
+			remove_action( 'wp_enqueue_scripts', 'wp_enqueue_block_style_variation_styles', 1 );
 		}
 
 		// Security

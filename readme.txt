@@ -2,9 +2,9 @@
 Contributors: rationalwp
 Tags: cleanup, performance, security, optimization, disable xmlrpc
 Requires at least: 6.3
-Tested up to: 7.1
+Tested up to: 7.2
 Requires PHP: 7.4
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -117,6 +117,10 @@ It blocks two common methods attackers use to discover usernames: author archive
 
 == Changelog ==
 
+= 1.1.3 =
+* Tested up to WordPress 7.2.
+* Fixed: with "Remove global styles" on, WordPress logged a missing-dependency notice for `block-style-variation-styles` on every front-end page. Block style variation styles are now unhooked along with global styles. Front-end output is unchanged.
+
 = 1.1.2 =
 * Tested up to WordPress 7.1.
 * Removed: the "Remove WLW manifest link" option. WordPress stopped outputting the WLW manifest link in 6.3, so the option no longer had any effect.
@@ -144,6 +148,9 @@ It blocks two common methods attackers use to discover usernames: author archive
 * Admin dashboard cleanup (5 widget removal options)
 
 == Upgrade Notice ==
+
+= 1.1.3 =
+Confirmed compatible with WordPress 7.2. Fixes a debug notice when "Remove global styles" is on.
 
 = 1.1.2 =
 Confirmed compatible with WordPress 7.1. This release requires WordPress 6.3 or newer and removes the "Remove WLW manifest link" option, which no longer did anything on supported versions.
